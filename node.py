@@ -140,7 +140,28 @@ def get_chain():
         dict_block['transactions']=[tx.__dict__ for tx in dict_block['transactions']]
     return jsonify(dict_chain),200#http status code(was it was succesful or not)
     
+@app.route('/node', methods=['POST'])
+def add_node():
+    values = request.get_json()
+    if not values:
+        respose = {
+            'message' : 'No data attached'
+        }
+        return jsonify(response), 400
+    if 'node' not in values: #value is dict, "in" checks for existencie of keys
+        respose = {
+            'message' : 'No node data attached'
+        }
+        return jsonify(response), 400
+    node = values['node']
+    blockchain.add_peer_node(node)
+    response={
+    'message' : 'Node added succesfully',
+    'all_nodes': blockchain.get_peer_nodes()
+    }
+    return jsonify(response), 201
+
 
 if __name__ =='__main__':#only start if directly executing it
 #start the server
-    app.run(host='0.0.0.0',port=5000) #IP on which to run and port which we want to lsiten
+    app.run(host='0.0.0.0',port=5007) #IP on which to run and port which we want to lsiten
