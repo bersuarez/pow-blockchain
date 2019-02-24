@@ -13,8 +13,13 @@ CORS(app)
 
 @app.route('/',methods=['GET'])#its and endpoint.. (path, methods which shoul reach that route)
 #when i reach a GET requerst reaches just our our IP in port and slash nothin, the funcition should be executed and wrpa the reutn in http response
-def get_ui():
+def get_node_ui():
     return send_from_directory('ui','node.html')
+
+@app.route('/network',methods=['GET'])#its and endpoint.. (path, methods which shoul reach that route)
+#when i reach a GET requerst reaches just our our IP in port and slash nothin, the funcition should be executed and wrpa the reutn in http response
+def get_network_ui():
+    return send_from_directory('ui','network.html')
 
 @app.route('/wallet',methods=['POST'])
 def create_keys():
@@ -161,7 +166,31 @@ def add_node():
     }
     return jsonify(response), 201
 
+@app.route('/node/<node_url>', methods=['DELETE'])
+def remove_node(node_url):
+    if node_url == '' or node_url == None:
+        response = {
+            'message': 'No node found'
+        }
+        return jsonify(response), 400
+    blockchain.remove_peer_node(node_url)
+    response = {
+        'message': 'Node removed',
+        'all_nodes': blockchain.get_peer_nodes()
+    }
+    return jsonify(response), 200
+
+@app.route('/nodes', methods=['GET'])
+def get_nodes():
+    nodes = blockchain.get_peer_nodes()
+    response = {
+        'all_nodes': nodes
+    }
+    return jsonify(response), 200
+
+
 
 if __name__ =='__main__':#only start if directly executing it
 #start the server
-    app.run(host='0.0.0.0',port=5007) #IP on which to run and port which we want to lsiten
+    app.debug=True
+    app.run(host='0.0.0.0',port=5001) #IP on which to run and port which we want to lsiten

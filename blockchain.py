@@ -32,9 +32,9 @@ class Blockchain:
         self.chain = [genesis_block]
         # Unhandled transactions
         self.__open_transactions = []
-        self.load_data()
         self.hosting_node = hosting_node_id
         self.__peer_nodes = set() #use set to ensure congruence with other nodes, only adds unique values
+        self.load_data()
 
     # This turns the chain attribute into a property with a getter (the method below) and a setter (@chain.setter)
     @property
