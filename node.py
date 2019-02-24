@@ -7,8 +7,6 @@ from blockchain import Blockchain
 
 #create server
 app = Flask(__name__)#telling it the context on which to run
-wallet=Wallet()
-blockchain=Blockchain(wallet.public_key)
 CORS(app)
 
 @app.route('/',methods=['GET'])#its and endpoint.. (path, methods which shoul reach that route)
@@ -27,7 +25,7 @@ def create_keys():
     wallet.save_keys()
     if wallet.save_keys():
         global blockchain
-        blockchain=Blockchain(wallet.public_key)
+        blockchain=Blockchain(wallet.public_key, port)
         response={
             'public_key':wallet.public_key,
             'private_key':wallet.private_key,
@@ -44,7 +42,7 @@ def create_keys():
 def load_keys():
     if wallet.load_keys():
         global blockchain
-        blockchain=Blockchain(wallet.public_key)
+        blockchain=Blockchain(wallet.public_key, port)
         response={
             'public_key':wallet.public_key,
             'private_key':wallet.private_key,
@@ -193,4 +191,11 @@ def get_nodes():
 if __name__ =='__main__':#only start if directly executing it
 #start the server
     app.debug=True
-    app.run(host='0.0.0.0',port=5001) #IP on which to run and port which we want to lsiten
+    from argparse import ArgumentParser
+    parser= ArgumentParser()
+    parser.add_argument('-p', '--port', type=int, default=5000) #allows us to parse arguments we pass along with our Python filename command
+    args = parser.parse_args()
+    port = args.port
+    wallet=Wallet(port)
+    blockchain=Blockchain(wallet.public_key, port)
+    app.run(host='0.0.0.0',port=port) #IP on which to run and port which we want to lsiten
