@@ -1,5 +1,5 @@
 # POW Blockchain demonstration
-This is a flask based blockchain that make use of the following concepts:
+This is a flask based blockchain that makes use of the following concepts:
 * Coin minting
 * Mining
 * Transaction and block hashing for Proof of Work

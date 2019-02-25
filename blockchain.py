@@ -5,14 +5,13 @@ import json
 import pickle
 import requests
 
-# Import two functions from our hash_util.py file. Omit the ".py" in the import
 from utility.hash_util import hash_block
 from block import Block
 from transaction import Transaction
 from utility.verification import Verification
 from wallet import Wallet
 
-# The reward we give to miners (for creating a new block)
+
 MINING_REWARD = 10
 
 print(__name__)
@@ -27,9 +26,7 @@ class Blockchain:
     """
     def __init__(self, public_key, node_id):
         """The constructor of the Blockchain class."""
-        # Our starting block for the blockchain
         genesis_block = Block(0, '', [], 100, 0)
-        # Initializing our (empty) blockchain list
         self.chain = [genesis_block]
         # Unhandled transactions
         self.__open_transactions = []
@@ -63,7 +60,7 @@ class Blockchain:
                 # blockchain = file_content['chain']
                 # open_transactions = file_content['ot']
                 blockchain = json.loads(file_content[0][:-1])
-                # We need to convert  the loaded data because Transactions should use OrderedDict
+                # Loaded data has to be converted because Transactions should use OrderedDict
                 updated_blockchain = []
                 for block in blockchain:
                     converted_tx = [Transaction(
@@ -73,7 +70,7 @@ class Blockchain:
                     updated_blockchain.append(updated_block)
                 self.chain = updated_blockchain
                 open_transactions = json.loads(file_content[1][:-1])
-                # We need to convert  the loaded data because Transactions should use OrderedDict
+                # Loaded data has to be converted because Transactions should use OrderedDict
                 updated_transactions = []
                 for tx in open_transactions:
                     updated_transaction = Transaction(
@@ -198,7 +195,6 @@ class Blockchain:
         # Hash the last block (=> to be able to compare it to the stored hash value)
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
-        # Miners should be rewarded, so let's create a reward transaction
         # reward_transaction = {
         #     'sender': 'MINING',
         #     'recipient': owner,
