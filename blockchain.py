@@ -216,14 +216,24 @@ class Blockchain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
+        for node in self.__peer_nodes:
+            url = 'http://{}/broadcast-block'.format(node) #the node would be the IP address in a real blockchain
+            converted_block = block.__dict__.copy()
+            converted_block['transactions'] = [tx.__dict__ for tx in converted_block['transactions']]
+            try:
+                response = requests.post(url, json={'block': converted_block})
+                if response.status_code == 400 or response.status_code ==500: 
+                    print('block declined, needs resolving')
+            except request.exceptions.ConnectionError:
+                continue
         return block
 
-    def add_block(self, node): #add existing block instead of mining a new one
-        transactions = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transaction']]
-        proof_is_valid = Verification.valid_proof(transactions, block['previous_hash'], block['proof'])
+    def add_block(self, block): #add existing block instead of mining a new one
+        transactions = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
+        proof_is_valid = Verification.valid_proof(transactions[:-1], block['previous_hash'], block['proof']) #check all but last because it is the reward transaction and is obviously not present before
         hashes_match = hash_block(self.chain[-1]) == block['previous_hash']#check if hash of last block matches the correspondent one from the incoming block
         if not proof_is_valid or not hashes_match:
-            return false
+            return False
         converted_block = Block(block['index'],block['previous_hash'], transactions, block['proof'], block['timestamp'] ) #convert object
         self.__chain.append(converted_block)
         self.save_data() #update stored data for peer node

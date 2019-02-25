@@ -107,9 +107,14 @@ def broadacst_block():
         response ={'message': 'Block is missing'}
         return jsonify(response), 400
     block = values['block']
-    if block['index'] == blockchain.chanin[-1].index +1: #check if incoming block corresponds to one after the last local's blockchain block
-        blockchain.add_block(block)
-    elif block['index'] > blockchain.chain[-1].index
+    if block['index'] == blockchain.chain[-1].index +1: #check if incoming block corresponds to one after the last local's blockchain block
+        if blockchain.add_block(block):
+            response = {'message': 'Block added'}
+            return jsonify(response), 201
+        else:
+            response = {'message': 'Block seems invalid'}
+            return jsonify(response), 500
+    elif block['index'] > blockchain.chain[-1].index:
         pass
     else: 
         response = {'message': 'Blockchain seems to be shorters, block not added'} #tell the incoming node that their blockchain is out of date
