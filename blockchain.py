@@ -3,6 +3,7 @@ import hashlib as hl
 
 import json
 import pickle
+import requests
 
 # Import two functions from our hash_util.py file. Omit the ".py" in the import
 from utility.hash_util import hash_block
@@ -115,12 +116,15 @@ class Blockchain:
             proof += 1
         return proof
 
-    def get_balance(self):
+    def get_balance(self, sender=None):
         """Calculate and return the balance for a participant.
         """
-        if self.public_key==None:
-            return None
-        participant = self.public_key
+        if sender == None:
+            if self.public_key==None:
+                return None
+            participant = self.public_key
+        else:
+            participant = sender
         # Fetch a list of all sent coin amounts for the given person (empty lists are returned if the person was NOT the sender)
         # This fetches sent amounts of transactions that were already included in blocks of the blockchain
         tx_sender = [[tx.amount for tx in block.transactions
@@ -152,7 +156,7 @@ class Blockchain:
     # One required one (transaction_amount) and one optional one (last_transaction)
     # The optional one is optional because it has a default value => [1]
 
-    def add_transaction(self, recipient, sender, signature, amount=1.0):
+    def add_transaction(self, recipient, sender, signature, amount=1.0, is_receiving=False):
         """ Append a new value as well as the last blockchain value to the blockchain.
 
         Arguments:
@@ -171,6 +175,16 @@ class Blockchain:
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
+            if not is_receiving:
+                for node in self.__peer_nodes:
+                    url = 'http://{}/broadcast-transaction'.format(node)
+                    try:
+                        response = requests.post(url, json={'sender': sender,'recipient':recipient, 'amount':amount,'signature':signature})
+                        if response.status_code == 400 or response.status_code ==500: 
+                            print('Transaction declined, needs resolving')
+                            return False
+                    except requests.exceptions.ConnectionError:
+                        continue #to keep on trying on the next nodes
             return True
         return False
 
@@ -203,6 +217,17 @@ class Blockchain:
         self.__open_transactions = []
         self.save_data()
         return block
+
+    def add_block(self, node): #add existing block instead of mining a new one
+        transactions = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transaction']]
+        proof_is_valid = Verification.valid_proof(transactions, block['previous_hash'], block['proof'])
+        hashes_match = hash_block(self.chain[-1]) == block['previous_hash']#check if hash of last block matches the correspondent one from the incoming block
+        if not proof_is_valid or not hashes_match:
+            return false
+        converted_block = Block(block['index'],block['previous_hash'], transactions, block['proof'], block['timestamp'] ) #convert object
+        self.__chain.append(converted_block)
+        self.save_data() #update stored data for peer node
+        return True
 
     def add_peer_node(self, node):
         """Adds a new node to the peer node set.
